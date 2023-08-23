@@ -16,7 +16,25 @@ const isTrue = (variable) => {
   );
 };
 
-const buildExec = () => {
+type env = {
+[key: string]: string | undefined;
+};
+
+type opts = {
+  cwd?: string;
+  env?: env;
+}
+
+type ExecOptions = {
+  execArgs: string[];
+  options: opts;
+  failCi: boolean;
+  os: string;
+  uploaderVersion: string;
+  verbose: boolean;
+};
+
+const buildExec = async (): Promise<ExecOptions> => {
   const clean = core.getInput('move_coverage_to_trash');
   const commitParent = core.getInput('commit_parent');
   const dryRun = isTrue(core.getInput('dry_run'));
@@ -46,9 +64,20 @@ const buildExec = () => {
   const slug = core.getInput('slug');
   const swift = core.getInput('swift');
   const swiftProject = core.getInput('swift_project');
-  const token = core.getInput('token');
-  const upstream = core.getInput('upstream_proxy');
   const url = core.getInput('url');
+  let token = core.getInput('token');
+  if (token === '') {
+    let codecovURL = url;
+    if (codecovURL === '') {
+      codecovURL = 'https://codecov.io';
+    }
+    try {
+      token = await core.getIDToken(codecovURL);
+    } catch (error) {
+      core.debug(`Got error while retrieving id token: ${error}`);
+    }
+  }
+  const upstream = core.getInput('upstream_proxy');
   const verbose = isTrue(core.getInput('verbose'));
   const workingDir = core.getInput('working-directory');
   const xcode = core.getInput('xcode');
@@ -64,7 +93,7 @@ const buildExec = () => {
       `github-action-${version}`,
   );
 
-  const options:any = {};
+  const options:opts = {};
   options.env = Object.assign(process.env, {
     GITHUB_ACTION: process.env.GITHUB_ACTION,
     GITHUB_RUN_ID: process.env.GITHUB_RUN_ID,
@@ -84,7 +113,7 @@ const buildExec = () => {
   }
 
   if (token) {
-    options.env.CODECOV_TOKEN = token;
+    options.env['CODECOV_TOKEN'] = token;
   }
   if (clean) {
     execArgs.push('-c');
@@ -215,7 +244,16 @@ const buildExec = () => {
     execArgs.push(`${xtraArgs}`);
   }
 
-  return {execArgs, options, failCi, os, uploaderVersion, verbose};
+  const opts: ExecOptions = {
+    execArgs,
+    options,
+    failCi,
+    os,
+    uploaderVersion,
+    verbose,
+  };
+
+  return opts;
 };
 
 const buildCommitExec = () => {

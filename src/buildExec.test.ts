@@ -12,8 +12,8 @@ import {version} from '../package.json';
 
 const context = github.context;
 
-test('no arguments', () => {
-  const {execArgs, failCi} = buildExec();
+test('no arguments', async () => {
+  const opts = await buildExec();
 
   const args = [
     '-n',
@@ -24,12 +24,11 @@ test('no arguments', () => {
   if (context.eventName == 'pull_request') {
     args.push('-C', `${context.payload.pull_request.head.sha}`);
   }
-
-  expect(execArgs).toEqual(args);
-  expect(failCi).toBeFalsy();
+  expect(opts.execArgs).toEqual(args);
+  expect(opts.failCi).toBeFalsy();
 });
 
-test('all arguments', () => {
+test('all arguments', async () => {
   const envs = {
     'commit_parent': '83231650328f11695dfb754ca0f540516f188d27',
     'directory': 'coverage/',
@@ -72,8 +71,8 @@ test('all arguments', () => {
     process.env['INPUT_' + env.toUpperCase()] = envs[env];
   }
 
-  const {execArgs, failCi} = buildExec();
-  expect(execArgs).toEqual([
+  const opts = await buildExec();
+  expect(opts.execArgs).toEqual([
     '-n',
     'codecov',
     '-Q',
@@ -141,7 +140,7 @@ test('all arguments', () => {
     '/test.xcresult',
     '--some --other --args',
   ]);
-  expect(failCi).toBeTruthy();
+  expect(opts.failCi).toBeTruthy();
 
   for (const env of Object.keys(envs)) {
     delete process.env['INPUT_' + env.toUpperCase()];
@@ -156,16 +155,16 @@ describe('trim arguments after splitting them', () => {
     expect.stringContaining('github-action'),
   ];
 
-  test('files', () => {
-    const envs = {files: './client-coverage.txt, ./lcov.info'};
+  test('files', async () => {
+    const envs = {'files': './client-coverage.txt, ./lcov.info'};
 
     for (const [name, value] of Object.entries(envs)) {
       process.env['INPUT_' + name.toUpperCase()] = value;
     }
 
-    const {execArgs} = buildExec();
+    const opts = await buildExec();
 
-    expect(execArgs).toEqual(
+    expect(opts.execArgs).toEqual(
         expect.arrayContaining([
           ...baseExpectation,
           '-f',
@@ -180,16 +179,16 @@ describe('trim arguments after splitting them', () => {
     }
   });
 
-  test('flags', () => {
-    const envs = {flags: 'ios, mobile'};
+  test('flags', async () => {
+    const envs = {'flags': 'ios, mobile'};
 
     for (const [name, value] of Object.entries(envs)) {
       process.env['INPUT_' + name.toUpperCase()] = value;
     }
 
-    const {execArgs} = buildExec();
+    const opts = await buildExec();
 
-    expect(execArgs).toEqual(
+    expect(opts.execArgs).toEqual(
         expect.arrayContaining([
           ...baseExpectation,
           '-F',
@@ -204,16 +203,16 @@ describe('trim arguments after splitting them', () => {
     }
   });
 
-  test('functionalities', () => {
-    const envs = {functionalities: 'network, gcov'};
+  test('functionalities', async () => {
+    const envs = {'functionalities': 'network, gcov'};
 
     for (const [name, value] of Object.entries(envs)) {
       process.env['INPUT_' + name.toUpperCase()] = value;
     }
 
-    const {execArgs} = buildExec();
+    const opts = await buildExec();
 
-    expect(execArgs).toEqual(
+    expect(opts.execArgs).toEqual(
         expect.arrayContaining([
           ...baseExpectation,
           '-X',
