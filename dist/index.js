@@ -32248,6 +32248,15 @@ var core = __nccwpck_require__(2186);
 var github = __nccwpck_require__(5438);
 ;// CONCATENATED MODULE: ./src/buildExec.ts
 /* eslint-disable  @typescript-eslint/no-explicit-any */
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 
 
 const context = github.context;
@@ -32259,13 +32268,13 @@ const isTrue = (variable) => {
         lowercase === 'y' ||
         lowercase === 'yes');
 };
-const buildCommitExec = () => {
+const buildCommitExec = () => __awaiter(void 0, void 0, void 0, function* () {
     const commitParent = core.getInput('commit_parent');
     const overrideBranch = core.getInput('override_branch');
     const overrideCommit = core.getInput('override_commit');
     const overridePr = core.getInput('override_pr');
     const slug = core.getInput('slug');
-    const token = core.getInput('token');
+    const token = yield fetchToken();
     const commitCommand = 'create-commit';
     const commitExecArgs = [];
     const commitOptions = {};
@@ -32303,7 +32312,7 @@ const buildCommitExec = () => {
         commitExecArgs.push('--slug', `${slug}`);
     }
     return { commitExecArgs, commitOptions, commitCommand };
-};
+});
 const buildGeneralExec = () => {
     const url = core.getInput('url');
     const verbose = isTrue(core.getInput('verbose'));
@@ -32316,10 +32325,10 @@ const buildGeneralExec = () => {
     }
     return { args, verbose };
 };
-const buildReportExec = () => {
+const buildReportExec = () => __awaiter(void 0, void 0, void 0, function* () {
     const overrideCommit = core.getInput('override_commit');
     const slug = core.getInput('slug');
-    const token = core.getInput('token');
+    const token = yield fetchToken();
     const reportCommand = 'create-report';
     const reportExecArgs = [];
     const reportOptions = {};
@@ -32345,8 +32354,25 @@ const buildReportExec = () => {
         reportExecArgs.push('--slug', `${slug}`);
     }
     return { reportExecArgs, reportOptions, reportCommand };
-};
-const buildUploadExec = () => {
+});
+const fetchToken = () => __awaiter(void 0, void 0, void 0, function* () {
+    const token = core.getInput('token');
+    const useOIDC = isTrue(core.getInput('use_oidc'));
+    if (useOIDC) {
+        let codecovURL = core.getInput('url');
+        try {
+            if (codecovURL === '') {
+                codecovURL = 'https://codecov.io';
+            }
+            return core.getIDToken(codecovURL);
+        }
+        catch (error) {
+            core.setFailed(`Error while retrieving Github OIDC token: ${error.message}`);
+        }
+    }
+    return token;
+});
+const buildUploadExec = () => __awaiter(void 0, void 0, void 0, function* () {
     const envVars = core.getInput('env_vars');
     const dryRun = isTrue(core.getInput('dry_run'));
     const failCi = isTrue(core.getInput('fail_ci_if_error'));
@@ -32363,7 +32389,7 @@ const buildUploadExec = () => {
     const rootDir = core.getInput('root_dir');
     const searchDir = core.getInput('directory');
     const slug = core.getInput('slug');
-    const token = core.getInput('token');
+    const token = yield fetchToken();
     let uploaderVersion = core.getInput('version');
     const workingDir = core.getInput('working-directory');
     const plugin = core.getInput('plugin');
@@ -32468,7 +32494,7 @@ const buildUploadExec = () => {
         uploaderVersion,
         uploadCommand,
     };
-};
+});
 
 
 ;// CONCATENATED MODULE: ./src/helpers.ts
@@ -32529,7 +32555,7 @@ var gpg = __nccwpck_require__(40);
 // EXTERNAL MODULE: ./node_modules/undici/index.js
 var undici = __nccwpck_require__(1773);
 ;// CONCATENATED MODULE: ./src/validate.ts
-var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var validate_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -32545,7 +32571,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
-const verify = (filename, platform, version, verbose, failCi) => __awaiter(void 0, void 0, void 0, function* () {
+const verify = (filename, platform, version, verbose, failCi) => validate_awaiter(void 0, void 0, void 0, function* () {
     try {
         const uploaderName = getUploaderName(platform);
         // Get SHASUM and SHASUM signature files
@@ -32562,8 +32588,8 @@ const verify = (filename, platform, version, verbose, failCi) => __awaiter(void 
             console.log(`Received SHA256SUM signature ${shaSig}`);
         }
         yield external_fs_.writeFileSync(external_path_.join(__dirname, `${uploaderName}.SHA256SUM.sig`), shaSig);
-        const validateSha = () => __awaiter(void 0, void 0, void 0, function* () {
-            const calculateHash = (filename) => __awaiter(void 0, void 0, void 0, function* () {
+        const validateSha = () => validate_awaiter(void 0, void 0, void 0, function* () {
+            const calculateHash = (filename) => validate_awaiter(void 0, void 0, void 0, function* () {
                 const stream = external_fs_.createReadStream(filename);
                 const uploaderSha = external_crypto_.createHash(`sha256`);
                 stream.pipe(uploaderSha);
@@ -32588,7 +32614,7 @@ const verify = (filename, platform, version, verbose, failCi) => __awaiter(void 
                 '--verify',
                 external_path_.join(__dirname, `${uploaderName}.SHA256SUM.sig`),
                 external_path_.join(__dirname, `${uploaderName}.SHA256SUM`),
-            ], (err, verifyResult) => __awaiter(void 0, void 0, void 0, function* () {
+            ], (err, verifyResult) => validate_awaiter(void 0, void 0, void 0, function* () {
                 if (err) {
                     setFailure('Codecov: Error importing pgp key', failCi);
                 }
@@ -32603,7 +32629,7 @@ const verify = (filename, platform, version, verbose, failCi) => __awaiter(void 
             '--no-default-keyring',
             '--import',
             __nccwpck_require__.ab + "pgp_keys.asc",
-        ], (err, importResult) => __awaiter(void 0, void 0, void 0, function* () {
+        ], (err, importResult) => validate_awaiter(void 0, void 0, void 0, function* () {
             if (err) {
                 setFailure('Codecov: Error importing pgp key', failCi);
             }
@@ -32665,65 +32691,75 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
 
 
 let failCi;
-try {
-    const { commitExecArgs, commitOptions, commitCommand } = buildCommitExec();
-    const { reportExecArgs, reportOptions, reportCommand } = buildReportExec();
-    const { uploadExecArgs, uploadOptions, failCi, os, uploaderVersion, uploadCommand, } = buildUploadExec();
-    const { args, verbose } = buildGeneralExec();
-    const platform = getPlatform(os);
-    const filename = external_path_.join(__dirname, getUploaderName(platform));
-    external_https_.get(getBaseUrl(platform, uploaderVersion), (res) => {
-        // Image will be stored at this path
-        const filePath = external_fs_.createWriteStream(filename);
-        res.pipe(filePath);
-        filePath
-            .on('error', (err) => {
-            setFailure(`Codecov: Failed to write uploader binary: ${err.message}`, true);
-        }).on('finish', () => src_awaiter(void 0, void 0, void 0, function* () {
-            filePath.close();
-            yield validate(filename, platform, uploaderVersion, verbose, failCi);
-            yield version(platform, uploaderVersion);
-            yield external_fs_.chmodSync(filename, '777');
-            const unlink = () => {
-                external_fs_.unlink(filename, (err) => {
-                    if (err) {
-                        setFailure(`Codecov: Could not unlink uploader: ${err.message}`, failCi);
-                    }
-                });
-            };
-            const doUpload = () => src_awaiter(void 0, void 0, void 0, function* () {
-                yield exec.exec(getCommand(filename, args, uploadCommand).join(' '), uploadExecArgs, uploadOptions)
-                    .catch((err) => {
-                    setFailure(`Codecov: 
+/**
+ * Main function of the codecov-action
+ */
+function run() {
+    return src_awaiter(this, void 0, void 0, function* () {
+        try {
+            const { commitExecArgs, commitOptions, commitCommand, } = yield buildCommitExec();
+            const { reportExecArgs, reportOptions, reportCommand, } = yield buildReportExec();
+            const { uploadExecArgs, uploadOptions, failCi, os, uploaderVersion, uploadCommand, } = yield buildUploadExec();
+            const { args, verbose } = buildGeneralExec();
+            const platform = getPlatform(os);
+            const filename = external_path_.join(__dirname, getUploaderName(platform));
+            external_https_.get(getBaseUrl(platform, uploaderVersion), (res) => {
+                // Image will be stored at this path
+                const filePath = external_fs_.createWriteStream(filename);
+                res.pipe(filePath);
+                filePath
+                    .on('error', (err) => {
+                    setFailure(`Codecov: Failed to write uploader binary: ${err.message}`, true);
+                }).on('finish', () => src_awaiter(this, void 0, void 0, function* () {
+                    filePath.close();
+                    yield validate(filename, platform, uploaderVersion, verbose, failCi);
+                    yield version(platform, uploaderVersion);
+                    yield external_fs_.chmodSync(filename, '777');
+                    const unlink = () => {
+                        external_fs_.unlink(filename, (err) => {
+                            if (err) {
+                                setFailure(`Codecov: Could not unlink uploader: ${err.message}`, failCi);
+                            }
+                        });
+                    };
+                    const doUpload = () => src_awaiter(this, void 0, void 0, function* () {
+                        yield exec.exec(getCommand(filename, args, uploadCommand).join(' '), uploadExecArgs, uploadOptions)
+                            .catch((err) => {
+                            setFailure(`Codecov: 
                       Failed to properly upload report: ${err.message}`, failCi);
-                });
-            });
-            const createReport = () => src_awaiter(void 0, void 0, void 0, function* () {
-                yield exec.exec(getCommand(filename, args, reportCommand).join(' '), reportExecArgs, reportOptions)
-                    .then((exitCode) => src_awaiter(void 0, void 0, void 0, function* () {
-                    if (exitCode == 0) {
-                        yield doUpload();
-                    }
-                })).catch((err) => {
-                    setFailure(`Codecov: 
+                        });
+                    });
+                    const createReport = () => src_awaiter(this, void 0, void 0, function* () {
+                        yield exec.exec(getCommand(filename, args, reportCommand).join(' '), reportExecArgs, reportOptions)
+                            .then((exitCode) => src_awaiter(this, void 0, void 0, function* () {
+                            if (exitCode == 0) {
+                                yield doUpload();
+                            }
+                        })).catch((err) => {
+                            setFailure(`Codecov: 
                       Failed to properly create report: ${err.message}`, failCi);
-                });
+                        });
+                    });
+                    yield exec.exec(getCommand(filename, args, commitCommand).join(' '), commitExecArgs, commitOptions)
+                        .then((exitCode) => src_awaiter(this, void 0, void 0, function* () {
+                        if (exitCode == 0) {
+                            yield createReport();
+                        }
+                        unlink();
+                    })).catch((err) => {
+                        setFailure(`Codecov:
+                       Failed to properly create commit: ${err.message}`, failCi);
+                    });
+                }));
             });
-            yield exec.exec(getCommand(filename, args, commitCommand).join(' '), commitExecArgs, commitOptions)
-                .then((exitCode) => src_awaiter(void 0, void 0, void 0, function* () {
-                if (exitCode == 0) {
-                    yield createReport();
-                }
-                unlink();
-            })).catch((err) => {
-                setFailure(`Codecov: Failed to properly create commit: ${err.message}`, failCi);
-            });
-        }));
+        }
+        catch (err) {
+            setFailure(`Codecov:
+     Encountered an unexpected error ${err.message}`, failCi);
+        }
     });
 }
-catch (err) {
-    setFailure(`Codecov: Encountered an unexpected error ${err.message}`, failCi);
-}
+run();
 
 })();
 

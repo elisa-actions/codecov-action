@@ -18,13 +18,13 @@ const isTrue = (variable) => {
 };
 
 
-const buildCommitExec = () => {
+const buildCommitExec = async () => {
   const commitParent = core.getInput('commit_parent');
   const overrideBranch = core.getInput('override_branch');
   const overrideCommit = core.getInput('override_commit');
   const overridePr = core.getInput('override_pr');
   const slug = core.getInput('slug');
-  const token = core.getInput('token');
+  const token = await fetchToken();
 
 
   const commitCommand = 'create-commit';
@@ -88,10 +88,10 @@ const buildGeneralExec = () => {
   return {args, verbose};
 };
 
-const buildReportExec = () => {
+const buildReportExec = async () => {
   const overrideCommit = core.getInput('override_commit');
   const slug = core.getInput('slug');
-  const token = core.getInput('token');
+  const token = await fetchToken();
 
 
   const reportCommand = 'create-report';
@@ -126,7 +126,26 @@ const buildReportExec = () => {
   return {reportExecArgs, reportOptions, reportCommand};
 };
 
-const buildUploadExec = () => {
+const fetchToken = async (): Promise<string> => {
+  const token = core.getInput('token');
+  const useOIDC = isTrue(core.getInput('use_oidc'));
+  if (useOIDC) {
+    let codecovURL = core.getInput('url');
+    try {
+      if (codecovURL === '') {
+        codecovURL = 'https://codecov.io';
+      }
+      return core.getIDToken(codecovURL);
+    } catch (error) {
+      core.setFailed(
+          `Error while retrieving Github OIDC token: ${error.message}`,
+      );
+    }
+  }
+  return token;
+};
+
+const buildUploadExec = async () => {
   const envVars = core.getInput('env_vars');
   const dryRun = isTrue(core.getInput('dry_run'));
   const failCi = isTrue(core.getInput('fail_ci_if_error'));
@@ -143,7 +162,7 @@ const buildUploadExec = () => {
   const rootDir = core.getInput('root_dir');
   const searchDir = core.getInput('directory');
   const slug = core.getInput('slug');
-  const token = core.getInput('token');
+  const token = await fetchToken();
   let uploaderVersion = core.getInput('version');
   const workingDir = core.getInput('working-directory');
   const plugin = core.getInput('plugin');
@@ -264,5 +283,6 @@ export {
   buildCommitExec,
   buildGeneralExec,
   buildReportExec,
-  buildUploadExec,
+  buildUploadExec
 };
+

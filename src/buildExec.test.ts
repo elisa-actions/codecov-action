@@ -34,9 +34,9 @@ test('general args', () => {
 });
 
 
-test('upload args using context', () => {
+test('upload args using context', async () => {
   const expectedArgs = [];
-  const {uploadExecArgs, uploadCommand} = buildUploadExec();
+  const {uploadExecArgs, uploadCommand} = await buildUploadExec();
   if (context.eventName == 'pull_request') {
     expectedArgs.push('-C', `${context.payload.pull_request.head.sha}`);
   }
@@ -48,7 +48,7 @@ test('upload args using context', () => {
   expect(uploadCommand).toEqual('do-upload');
 });
 
-test('upload args', () => {
+test('upload args', async () => {
   const envs = {
     'directory': 'coverage/',
     'dry_run': 'true',
@@ -74,7 +74,7 @@ test('upload args', () => {
     process.env['INPUT_' + env.toUpperCase()] = envs[env];
   }
 
-  const {uploadExecArgs, uploadCommand} = buildUploadExec();
+  const {uploadExecArgs, uploadCommand} = await buildUploadExec();
   const expectedArgs = [
     '-n',
     'codecov',
@@ -124,7 +124,7 @@ test('upload args', () => {
 });
 
 
-test('report args', () => {
+test('report args', async () => {
   const envs = {
     override_commit: '9caabca5474b49de74ef5667deabaf74cdacc244',
     slug: 'fakeOwner/fakeRepo',
@@ -134,7 +134,7 @@ test('report args', () => {
     process.env['INPUT_' + env.toUpperCase()] = envs[env];
   }
 
-  const {reportExecArgs, reportCommand} = buildReportExec();
+  const {reportExecArgs, reportCommand} = await buildReportExec();
 
   expect(reportExecArgs).toEqual(
       expect.arrayContaining([
@@ -150,7 +150,7 @@ test('report args', () => {
 });
 
 
-test('report args using context', () => {
+test('report args using context', async () => {
   const envs = {
     token: 'd3859757-ab80-4664-924d-aef22fa7557b',
   };
@@ -162,7 +162,7 @@ test('report args using context', () => {
     expectedArgs.push('-C', `${context.payload.pull_request.head.sha}`);
   }
 
-  const {reportExecArgs, reportCommand} = buildReportExec();
+  const {reportExecArgs, reportCommand} = await buildReportExec();
 
   expect(reportExecArgs).toEqual(expectedArgs);
   expect(reportCommand).toEqual('create-report');
@@ -172,7 +172,7 @@ test('report args using context', () => {
 });
 
 
-test('commit args', () => {
+test('commit args', async () => {
   const envs = {
     override_commit: '9caabca5474b49de74ef5667deabaf74cdacc244',
     slug: 'fakeOwner/fakeRepo',
@@ -185,7 +185,7 @@ test('commit args', () => {
     process.env['INPUT_' + env.toUpperCase()] = envs[env];
   }
 
-  const {commitExecArgs, commitCommand} = buildCommitExec();
+  const {commitExecArgs, commitCommand} = await buildCommitExec();
 
   expect(commitExecArgs).toEqual(
       expect.arrayContaining([
@@ -206,10 +206,10 @@ test('commit args', () => {
   }
 });
 
-test('commit args using context', () => {
+test('commit args using context', async () => {
   const expectedArgs :string[] = [];
 
-  const {commitExecArgs, commitCommand} = buildCommitExec();
+  const {commitExecArgs, commitCommand} = await buildCommitExec();
   if (context.eventName == 'pull_request') {
     expectedArgs.push('-C', `${context.payload.pull_request.head.sha}`);
   }
