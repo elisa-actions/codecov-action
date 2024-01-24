@@ -71,6 +71,9 @@ inputs:
   working-directory:
     description: 'Directory in which to execute codecov.sh'
     required: false
+  xtra_args:
+    description: 'Add additional uploader args that may be missing in the Action'
+    required: false
 branding:
   color: 'red'
   icon: 'umbrella'
